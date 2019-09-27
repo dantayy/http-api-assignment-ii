@@ -32,7 +32,6 @@ const getCSS = (request, response) => {
 
 // respond with json data
 const respondJSON = (request, response, status, object) => {
-    console.log('Writing response with an obj');
     response.writeHead(status, { 'Content-Type': 'application/json' });
     response.write(JSON.stringify(object));
     response.end();
@@ -40,7 +39,6 @@ const respondJSON = (request, response, status, object) => {
 
 // respond only with headers
 const respondJSONMeta = (request, response, status) => {
-    console.log('Writing head data only');
     response.writeHead(status, { 'Content-Type': 'application/json' });
     response.end();
 };
@@ -64,7 +62,7 @@ const addUser = (request, response) => {
         body.push(chunk);
     });
 
-    // make data processed easier to handle by putting the params into an obj
+    // handle fully processed post data
     request.on('end', () => {
         bodyString = Buffer.concat(body).toString();
         bodyParams = query.parse(bodyString);
