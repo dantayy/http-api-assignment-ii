@@ -1,0 +1,26 @@
+{
+    "name": "http-api-assignment-ii",
+    "version": "1.0.0",
+    "description": "making a simple HTTP API to learn how to manage all aspects of the server handling requests from the user, now with different request methods",
+    "main": "server.js",
+    "scripts": {
+        "start": "node ./src/server.js",
+        "pretest": "eslint ./src --fix",
+        "test": "echo \"Tests complete\""
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dantayy/http-api-assignment-ii.git"
+    },
+    "author": "Nicholas Mercadante",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/dantayy/http-api-assignment-ii/issues"
+    },
+    "homepage": "https://github.com/dantayy/http-api-assignment-ii#readme",
+    "devDependencies": {
+        "eslint": "^4.19.1",
+        "eslint-config-airbnb": "^15.1.0",
+        "eslint-plugin-import": "^2.18.2"
+    }
+}

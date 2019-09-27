@@ -1,37 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>Our simple HTTP server</title>
-  <link rel="stylesheet" type="text/css" href="/style.css">
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-  <script type="text/babel">
+    <head>
+        <title>Our simple HTTP server</title>
+        <link rel="stylesheet" type="text/css" href="/style.css">
 
-  </script>
-</head>
-<body>
-  <section id="top">
-    <h3>POST Status Code Tests</h3>
-    <form id="nameForm" action="/addUser" method="post">
-      <label for="name">Name: </label>
-      <input id="nameField" type="text" name="name" />
-      <label for="age">Age: </label>
-      <input id="ageField" type="number" name="age" min="0" max="100" step="1"/>
-      <input type="submit" value="Add User" />
-    </form>
-    <form id="userForm" action="/getUsers" method="get">
-      <select id='urlField'>
-        <option value='/getUsers'>/getUsers</option>
-        <option value='/notReal'>/notReal</option>
-      </select>
-      <select id="methodSelect">
-        <option value="get">GET</option>
-        <option value="head">HEAD</option>
-      </select>
-      <input type="submit" value="Get User" />
-    </form>
-  </section>
-  <section id="content">
-  </section>
-</body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+        <script type="text/babel">
+            //function to handle xhr response
+            const handleResponse = (xhr) => {
+
+                //grab the content section
+                const content = document.querySelector("#content");
+
+                //create h1 and p to hold our response data for the page
+                const h1 = document.createElement('h1');
+                const p = document.createElement('p');
+
+                //apply text to the h1 based on the status code
+                switch(xhr.status) {
+                    case 200: //success
+                        h1.innerHTML = `<b>Success</b>`;
+                        break;
+                    case 201: //created
+                        h1.innerHTML = `<b>Created</b>`;
+                        break;
+                    case 204: //updated
+                        h1.innerHTML = `<b>Updated</b>`;
+                        break;
+                    case 400: //bad request 
+                        h1.innerHTML = `<b>Bad Request</b>`;
+                        break;
+                    case 401: //unauthorized 
+                        h1.innerHTML = `<b>Unauthorized</b>`;
+                        break;
+                    case 403: //forbidden 
+                        h1.innerHTML = `<b>Forbidden</b>`;
+                        break;
+                    case 404: //not found (requested resource does not exist)
+                        h1.innerHTML = `<b>Resource Not Found</b>`;
+                        break;
+                    case 500: //internal server error
+                        h1.innerHTML = `<b>Internal Server Error</b>`;
+                        break;
+                    case 501: //not implemented
+                        h1.innerHTML = `<b>Not Implemented</b>`;
+                        break;
+                    default: //default other errors we are not handling in this example
+                        h1.innerHTML = `<b>Error code not implemented by client.</b>`;
+                        break;
+                }
+
+                //append the h1 to the content.
+                content.appendChild(h1);
+
+                //parse response (obj will be empty in a 204 updated or head request)
+                const obj = JSON.parse(xhr.response);
+                console.log(obj);
+
+                // default message
+                p.innerHTML = '(No Content)';
+                
+                //if message in response, add to screen
+                if(obj.message) {
+                    p.innerHTML = `Message: ${obj.message}`;
+                }
+
+                //if users in resp`onse, add to screen
+                if(obj.users) {
+                    const users = JSON.stringify(obj.users);
+                    p.innerHTML = users;
+                }
+
+                //append the p to the content
+                content.appendChild(p);
+            };
+
+            //function to send request to server
+            const requestUpdate = (e, userForm) => {
+
+                //get the action (url) and method (request type) from passed form
+                let formAction = userForm.getAttribute('action');
+                let formMethod = userForm.getAttribute('method');
+                
+                //handle case of the url selected being "notReal"
+                if(userForm.querySelector("#urlField")){
+                    if(userForm.querySelector("#urlField").value === "/notReal"){
+                        formAction = "/notReal";
+                    }
+                }
+                
+                //handle case of request selected being "head"
+                if(userForm.querySelector("#methodSelect")){
+                    if(userForm.querySelector("#methodSelect").value === "head"){
+                        formMethod = "head";
+                    }
+                }
+
+                //open a new xmlhttprequest based on passed form action/method
+                const xhr = new XMLHttpRequest();
+                xhr.open(formMethod, formAction);
+
+                //when a response is recieved call the handleResponse function
+                xhr.onload = () => handleResponse(xhr);
+
+                //handle a post request
+                if(formMethod === "post") {
+                    console.log("inside of a post request");
+                    //get the name and age to pass to the server
+                    const nameField = userForm.querySelector('#nameField');
+                    const ageField = userForm.querySelector('#ageField');
+
+                    //type used when parsing url query strings
+                    xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
+                    
+                    console.log(`Name: ${nameField.value}, Age: ${ageField.value}`);
+                    
+                    //send an ajax request with the parsed form data
+                    const formData = `name=${nameField.value}&age=${ageField.value}`;
+                    xhr.send(formData);
+
+                } else { //handle get or head requests
+                    //send basic ajax request
+                    xhr.send();
+                } 
+
+
+                //prevent the browser's default action (to send the form on its own)
+                e.preventDefault();
+                //return false to prevent the browser from trying to change page
+                return false;
+            };
+
+            const init = () => {
+
+                //grab the relevent items from the page and start listening to them
+                const sendUserForm = document.querySelector("#nameForm");
+                const getUserForm = document.querySelector("#userForm");
+
+                //functions to handle our requests
+                const sendUsers = (e) => requestUpdate(e, sendUserForm);
+                const getUsers = (e) => requestUpdate(e, getUserForm);
+
+                //add event listeners to the send buttons
+                sendUserForm.addEventListener('submit', sendUsers);
+                getUserForm.addEventListener('submit', getUsers);
+            };
+
+            //load the init function when the page loads
+            window.onload = init;
+        </script>
+    </head>
+    <body>
+        <section id="top">
+            <h3>POST Status Code Tests</h3>
+            <form id="nameForm" action="/addUser" method="post">
+                <label for="name">Name: </label>
+                <input id="nameField" type="text" name="name" />
+                <label for="age">Age: </label>
+                <input id="ageField" type="number" name="age" min="0" max="100" step="1"/>
+                <input type="submit" value="Add User" />
+            </form>
+            <form id="userForm" action="/getUsers" method="get">
+                <select id='urlField'>
+                    <option value='/getUsers'>/getUsers</option>
+                    <option value='/notReal'>/notReal</option>
+                </select>
+                <select id="methodSelect">
+                    <option value="get">GET</option>
+                    <option value="head">HEAD</option>
+                </select>
+                <input type="submit" value="Get User" />
+            </form>
+        </section>
+        <section id="content">
+        </section>
+    </body>
 </html>
