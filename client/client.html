@@ -7,7 +7,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
         <script type="text/babel">
             //function to handle xhr response
-            const handleResponse = (xhr) => {
+            const handleResponse = (xhr, parseResponse) => {
 
                 //grab the content section
                 const content = document.querySelector("#content");
@@ -53,22 +53,24 @@
                 //append the h1 to the content.
                 content.appendChild(h1);
 
-                //parse response (obj will be empty in a 204 updated or head request)
-                const obj = JSON.parse(xhr.response);
-                console.log(obj);
-
                 // default message
                 p.innerHTML = '(No Content)';
                 
-                //if message in response, add to screen
-                if(obj.message) {
-                    p.innerHTML = `Message: ${obj.message}`;
-                }
+                //parse response if the request asked to do so and info isn't just being updated
+                if(parseResponse && xhr.status !== 204){
+                    const obj = JSON.parse(xhr.response);
+                    console.log(obj);
 
-                //if users in resp`onse, add to screen
-                if(obj.users) {
-                    const users = JSON.stringify(obj.users);
-                    p.innerHTML = users;
+                    //if message in response, add to screen
+                    if(obj.message) {
+                        p.innerHTML = `Message: ${obj.message}`;
+                    }
+
+                    //if users in resp`onse, add to screen
+                    if(obj.users) {
+                        const users = JSON.stringify(obj.users);
+                        p.innerHTML = users;
+                    }
                 }
 
                 //append the p to the content
@@ -101,7 +103,11 @@
                 xhr.open(formMethod, formAction);
 
                 //when a response is recieved call the handleResponse function
-                xhr.onload = () => handleResponse(xhr);
+                if(formMethod === "head"){
+                    xhr.onload = () => handleResponse(xhr, false);
+                } else {
+                    xhr.onload = () => handleResponse(xhr, true);
+                }
 
                 //handle a post request
                 if(formMethod === "post") {

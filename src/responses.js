@@ -32,7 +32,7 @@ const getCSS = (request, response) => {
 
 // respond with json data
 const respondJSON = (request, response, status, object) => {
-    console.log("Writing response with an obj");
+    console.log('Writing response with an obj');
     response.writeHead(status, { 'Content-Type': 'application/json' });
     response.write(JSON.stringify(object));
     response.end();
@@ -40,7 +40,7 @@ const respondJSON = (request, response, status, object) => {
 
 // respond only with headers
 const respondJSONMeta = (request, response, status) => {
-    console.log("Writing head data only");
+    console.log('Writing head data only');
     response.writeHead(status, { 'Content-Type': 'application/json' });
     response.end();
 };
@@ -68,41 +68,40 @@ const addUser = (request, response) => {
     request.on('end', () => {
         bodyString = Buffer.concat(body).toString();
         bodyParams = query.parse(bodyString);
-    });
+        
+        // start with failstate message and check for missing params first
+        responseJSON.message = 'Name and age are both required';
+        if (!bodyParams.name || !bodyParams.age) {
+            responseJSON.id = 'missingParams';
+            return respondJSON(request, response, 400, responseJSON);
+        }
 
-    // start with failstate message and check for missing params first
-    responseJSON.message = 'Name and age are both required';
-    if (!bodyParams.name || !bodyParams.age) {
-        responseJSON.id = 'missingParams';
-        return respondJSON(request, response, 400, responseJSON);
-    }
+        // potential response code if a new user was made
+        let responseCode = 201;
+        // case of a user needing to be updated rather than created
+        if (users[bodyParams.name]) {
+            responseCode = 204;
+        } else { // create a new user
+            users[bodyParams.name] = {};
+        }
 
-    // potential response code if a new user was made
-    let responseCode = 201;
-    // case of a user needing to be updated rather than created
-    if (users[bodyParams.name]) {
-        responseCode = 204;
-    } else { // create a new user
-        users[bodyParams.name] = {};
-    }
+        // set the user's values
+        users[bodyParams.name].name = bodyParams.name;
+        users[bodyParams.name].age = bodyParams.age;
 
-    // set the user's values
-    users[bodyParams.name].name = bodyParams.name;
-    users[bodyParams.name].age = bodyParams.age;
+        // send a response with an obj if a new user was created
+        if (responseCode === 201) {
+            delete respondJSON.id;
+            responseJSON.message = 'Created Successfully';
+            return respondJSON(request, response, responseCode, responseJSON);
+        }
 
-    // send a response with an obj if a new user was created
-    if (responseCode === 201) {
-        delete respondJSON.id;
-        responseJSON.message = 'Created Successfully';
-        return respondJSON(request, response, responseCode, responseJSON);
-    }
-
-    // return only header data if stuff was updated rather than created
-    return respondJSONMeta(request, response, responseCode);
+        // return only header data if stuff was updated rather than created
+        return respondJSONMeta(request, response, responseCode);  });
 };
 
 // return the users list
-const getUsers = (request, response) => respondJSON(request, response, 200, users);
+const getUsers = (request, response) => respondJSON(request, response, 200, {users});
 
 // return only a 200 status in this case
 const getUsersMeta = (request, response) => respondJSONMeta(request, response, 200);
@@ -118,7 +117,7 @@ const notReal = (request, response) => {
 // send back only the header data for a page that doesn't exist
 const notRealMeta = (request, response) => respondJSONMeta(request, response, 404);
 
-//export relevant functions
+// export relevant functions
 module.exports = {
     getIndex,
     getCSS,
