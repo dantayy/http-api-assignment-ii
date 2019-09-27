@@ -111,16 +111,13 @@
 
                 //handle a post request
                 if(formMethod === "post") {
-                    console.log("inside of a post request");
                     //get the name and age to pass to the server
                     const nameField = userForm.querySelector('#nameField');
                     const ageField = userForm.querySelector('#ageField');
 
                     //type used when parsing url query strings
                     xhr.setRequestHeader('Content-type', 'applications/x-www-form-urlencoded');
-                    
-                    console.log(`Name: ${nameField.value}, Age: ${ageField.value}`);
-                    
+                                        
                     //send an ajax request with the parsed form data
                     const formData = `name=${nameField.value}&age=${ageField.value}`;
                     xhr.send(formData);
